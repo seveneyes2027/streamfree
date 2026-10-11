@@ -2,6 +2,7 @@ import os
 import subprocess
 import time
 from pathlib import Path
+import urllib.request
 
 STREAM_KEY = os.environ.get("YOUTUBE_STREAM_KEY")
 VIDEO_FILE = "video.mp4"
@@ -13,40 +14,34 @@ if not STREAM_KEY:
 
 rtmp_url = f"rtmp://a.rtmp.youtube.com/live2/{STREAM_KEY}"
 music_path = Path(MUSIC_DIR)
+music_path.mkdir(exist_ok=True)
 
-if not music_path.exists():
-    print("දෝෂයකි: music නමින් ෆෝල්ඩරයක් හමු නොවීය!")
-    exit(1)
+# ඔබ ලබා දුන් Gofile සෘජු ලින්ක් 3
+MUSIC_URLS = [
+    "https://store9.gofile.io/download/web/5ab12ca6-d58f-443d-9ab1-356f930a9422/1%20(1).mp3",
+    "https://store5.gofile.io/download/web/c6138f14-ac4f-40fc-9b71-c88f0df71f75/1%20(2).mp3",
+    "https://store9.gofile.io/download/web/078db7f8-3a5f-4777-9d7b-3fbdeea849f9/1%20(4).mp3"
+]
 
-# ෆෝල්ඩරේ ඇති MP3 ෆයිල්ස් පරීක්ෂා කර valid ඒවා පමණක් තෝරා ගැනීම
-raw_files = sorted(list(music_path.glob("*.mp3")))
 valid_files = []
 
-if not raw_files:
-    print("අපහසුතාවයක්: music/ ෆෝල්ඩරේ තුළ MP3 ගොනු හමු නොවීය!")
-    exit(1)
-
-for i, file in enumerate(raw_files, start=1):
-    new_name = music_path / f"song{i}.mp3"
+print("අන්තර්ජාලයෙන් ගීත බාගත කරමින් සහ නම් සකස් කරමින් පවතී...")
+for i, url in enumerate(MUSIC_URLS, start=1):
+    # වරහන් සහ spaces රහිතව song1.mp3, song2.mp3 ලෙස සුරැකේ
+    file_path = music_path / f"song{i}.mp3"
     try:
-        if file != new_name:
-            if new_name.exists():
-                new_name.unlink()
-            file.rename(new_name)
-        
-        # ෆයිල් එකේ සැබෑ ප්‍රමාණය (size) බැලීම (KB 1 කට වඩා වැඩි විය යුතුය)
-        if new_name.stat().st_size > 1024:
-            valid_files.append(new_name)
+        urllib.request.urlretrieve(url, file_path)
+        if file_path.stat().st_size > 1024:
+            valid_files.append(file_path)
+            print(f"song{i}.mp3 සාර්ථකව බාගත කරන ලදී.")
         else:
-            print(f"අවවාදයයි: {new_name.name} ගොනුව ඉතා කුඩායි හෝ හානි වී ඇත.")
+            print(f"අවවාදයයි: song{i}.mp3 ගොනුව හානි වී ඇත.")
     except Exception as e:
-        print(f"දෝෂයක් ({file.name}): {e}")
+        print(f"බාගත කිරීමේ දෝෂයක් (song{i}): {e}")
 
 if not valid_files:
-    print("දෝෂයකි: භාවිත කළ හැකි කිසිදු නිවැරදි MP3 ගොනුවක් හමු නොවීය!")
+    print("දෝෂයකි: කිසිදු ගීතයක් බාගත කරගත නොහැකි විය!")
     exit(1)
-
-print(f"සාර්ථකව එකතු කළ ගීත සංඛ්‍යාව: {len(valid_files)}")
 
 # FFmpeg සඳහා audio inputs සකස් කිරීම
 audio_inputs = []
@@ -61,7 +56,7 @@ filter_complex_str = f"{inputs_mapping}concat=n={len(valid_files)}:v=0:a=1[outa]
 command = [
     "ffmpeg",
     "-re",
-    "-stream_loop", "-1", "-i", VIDEO_FILE,
+    "-stream_loop", "-1", "-i", VIDEO_FILE,     # වීඩියෝ එක දිගටම Loop වේ
 ] + audio_inputs + [
     "-filter_complex", filter_complex_str,
     "-c:v", "libx264",
