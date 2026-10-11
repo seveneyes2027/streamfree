@@ -6,6 +6,7 @@ from pathlib import Path
 STREAM_KEY = os.environ.get("YOUTUBE_STREAM_KEY")
 VIDEO_FILE = "video.mp4"
 MUSIC_DIR = "music"
+CONCAT_FILE = "concat.txt"
 
 if not STREAM_KEY:
     print("දෝෂයකි: YOUTUBE_STREAM_KEY environment variable එක සෙට් කර නැත!")
@@ -13,36 +14,28 @@ if not STREAM_KEY:
 
 rtmp_url = f"rtmp://a.rtmp.youtube.com/live2/{STREAM_KEY}"
 
-# music ෆෝල්ඩරේ ඇතුළේ තියෙන MP3 ෆයිල්ස් සෙවීම
-music_files = sorted([str(p) for p in Path(MUSIC_DIR).glob("*.mp3")])
+# music/ ෆෝල්ඩරයේ ඇති සියලුම MP3 ෆයිල්ස් සොයාගැනීම
+music_files = sorted([p for p in Path(MUSIC_DIR).glob("*.mp3")])
 
 if not music_files:
-    print("අපහසුතාවයක්: music/ ෆෝල්ඩරේ තුළ MP3 ගොනු හමු නොවීය! මුල් ශ්‍රව්‍ය සමඟ ස්ට්‍රීම් වේ.")
-    # සිංදු නැත්නම් පරණ ක්‍රමයටම anullsrc පාවිච්චි කරයි
-    audio_inputs = ["-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=44100"]
-    filter_complex = []
-else:
-    print(f"හමුවූ ගීත සංඛ්‍යාව: {len(music_files)}")
-    audio_inputs = []
-    for song in music_files:
-        audio_inputs.extend(["-stream_loop", "-1", "-i", song])
-    
-    # සියලුම සිංදු එකින් එක ප්ලේ වෙන්න (concat) FFmpeg filter එක සැකසීම
-    inputs_str = "".join([f"[{i}:a]" for i in range(1, len(music_files) + 1)])
-    filter_complex = [
-        "-filter_complex", 
-        f"{inputs_str}concat=n={len(music_files)}:v=0:a=1[outa]",
-        "-map", "0:v",
-        "-map", "[outa]"
-    ]
+    print("අපහසුතාවයක්: music/ ෆෝල්ඩරේ තුළ MP3 ගොනු හමු නොවීය!")
+    exit(1)
 
-# FFmpeg ලූප් ස්ට්‍රීම් විධානය
+print(f"හමුවූ ගීත සංඛ්‍යාව: {len(music_files)}")
+
+# FFmpeg සඳහා concat.txt ෆයිල් එක ස්වයංක්‍රීයව සෑදීම
+with open(CONCAT_FILE, "w", encoding="utf-8") as f:
+    for song in music_files:
+        # absolute path එක යොදා ගැනීමෙන් filenames වල වරහන්/spaces ප්‍රශ්න නැතිවේ
+        abs_path = song.resolve().as_posix()
+        f.write(f"file '{abs_path}'\n")
+
+# FFmpeg ස්ට්‍රීම් විධානය
 command = [
     "ffmpeg",
     "-re",
-    "-stream_loop", "-1",
-    "-i", VIDEO_FILE,
-] + audio_inputs + filter_complex + [
+    "-stream_loop", "-1", "-i", VIDEO_FILE,                 # වීඩියෝ එක දිගටම Loop වේ
+    "-stream_loop", "-1", "-f", "concat", "-safe", "0", "-i", CONCAT_FILE, # MP3 සියල්ල පිළිවෙලට එකින් එක Loop වේ
     "-c:v", "libx264",
     "-preset", "veryfast",
     "-b:v", "3000k",
@@ -52,6 +45,8 @@ command = [
     "-g", "60",
     "-c:a", "aac",
     "-b:a", "128k",
+    "-map", "0:v:0",
+    "-map", "1:a:0",
     "-shortest",
     "-f", "flv",
     rtmp_url
