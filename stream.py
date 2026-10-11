@@ -4,7 +4,7 @@ import time
 from pathlib import Path
 
 STREAM_KEY = os.environ.get("YOUTUBE_STREAM_KEY")
-VIDEO_FILE = "video.mp4"
+VIDEO_FILE = "video2.mp4"
 MUSIC_DIR = "music"
 
 if not STREAM_KEY:
@@ -69,8 +69,8 @@ command = [
     "-maxrate", "11000k",
     "-bufsize", "22000k",
     "-pix_fmt", "yuv420p",
-    "-r", "60",          # FPS 60 ලෙස සැකසීම
-    "-g", "120",         # 60 FPS සඳහා keyframe interval එක 120 ලෙස තැබීම සුදුසුය
+    "-r", "30",          # FPS 60 ලෙස සැකසීම
+    "-g", "60",         # 60 FPS සඳහා keyframe interval එක 120 ලෙස තැබීම සුදුසුය
     "-c:a", "aac",
     "-b:a", "320k",      # උසස් තත්ත්වයේ 320kbps ශ්‍රව්‍යය
     "-map", "0:v:0",
