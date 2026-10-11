@@ -15,31 +15,30 @@ rtmp_url = f"rtmp://a.rtmp.youtube.com/live2/{STREAM_KEY}"
 music_path = Path(MUSIC_DIR)
 music_path.mkdir(exist_ok=True)
 
-# Tmpfiles Direct Links
+# ඔබ ලබා දුන් නව සෘජු ලින්ක් 3 මෙහි ඇතුළත් කර ඇත
 MUSIC_URLS = [
-    "https://tmpfiles.org/dl/w8AL6lbnwvPO/13.mp3",
-    "https://tmpfiles.org/dl/wAAf6dbJeYw6/15.mp3",
-    "https://tmpfiles.org/dl/wgAv6Cbkf3KP/17.mp3"
+    "https://tmpfiles.org/dl/1791709366.297ab0a133a9c74b/w8AL6lbnwvPO/13.mp3",
+    "https://tmpfiles.org/dl/1791709366.297ab0a133a9c74b/wAAf6dbJeYw6/15.mp3", # අදාළ ලින්ක් 2
+    "https://tmpfiles.org/dl/1791709366.297ab0a133a9c74b/wgAv6Cbkf3KP/17.mp3"  # අදාළ ලින්ක් 3
 ]
 
 valid_files = []
 
-print("අන්තර්ජාලයෙන් ගීත බාගත කරමින් පවතී (wget හරහා)...")
+print("ගීත බාගත කරමින් පවතී...")
 for i, url in enumerate(MUSIC_URLS, start=1):
     file_path = music_path / f"song{i}.mp3"
     
-    # Linux wget command එක පාවිච්චි කරමින් ඩවුන්ලෝඩ් කිරීම (වෙබ් පිටු බාගත වීම වැළකේ)
     cmd = ["wget", "-O", str(file_path), url]
-    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     
-    if file_path.exists() and file_path.stat().st_size > 50000:
+    if file_path.exists() and file_path.stat().st_size > 1024:
         valid_files.append(file_path)
-        print(f"song{i}.mp3 සාර්ථකව බාගත කරන ලදී.")
+        print(f"song{i}.mp3 සාර්ථකව ලබා ගන්නා ලදී.")
     else:
-        print(f"අවවාදයයි: song{i}.mp3 ඩවුන්ලෝඩ් කරගැනීමට නොහැකි විය.")
+        print(f"අවවාදයයි: song{i}.mp3 ලබා ගැනීමට නොහැකි විය.")
 
 if not valid_files:
-    print("දෝෂයකි: කිසිදු ගීතයක් බාගත කරගත නොහැකි විය!")
+    print("දෝෂයකි: කිසිදු ගීතයක් ලබාගත නොහැකි විය!")
     exit(1)
 
 # FFmpeg සඳහා audio inputs සකස් කිරීම
@@ -55,7 +54,7 @@ filter_complex_str = f"{inputs_mapping}concat=n={len(valid_files)}:v=0:a=1[outa]
 command = [
     "ffmpeg",
     "-re",
-    "-stream_loop", "-1", "-i", VIDEO_FILE,     # වීඩියෝ එක දිගටම Loop වේ
+    "-stream_loop", "-1", "-i", VIDEO_FILE,
 ] + audio_inputs + [
     "-filter_complex", filter_complex_str,
     "-c:v", "libx264",
