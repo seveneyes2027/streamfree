@@ -15,10 +15,10 @@ rtmp_url = f"rtmp://a.rtmp.youtube.com/live2/{STREAM_KEY}"
 music_path = Path(MUSIC_DIR)
 music_path.mkdir(exist_ok=True)
 
-# Vocaroo සෘජු MP3 ලින්ක්ස් මෙහි ඇතුළත් කරන්න (අවශ්‍ය නම් තවත් ලින්ක් එකතු කළ හැක)
+# Pixeldrain සෘජු ඩවුන්ලෝඩ් ලින්ක්ස් මෙහි ඇතුළත් කරන්න
 MUSIC_URLS = [
-    "https://media1.vocaroo.com/mp3/1ippMrqt7gUe",
-    # "තවත්_සිංදුවක_ඩිරෙක්ට්_ලින්ක්_එකක්_නම්_මෙතැනට_දාන්න"
+    "https://pixeldrain.com/api/file/9777gpVt",
+    # වෙනත් සිංදු තියෙනවා නම් මෙතැනට ඒවායේ api/file/... ලින්ක්ස් දාන්න
 ]
 
 valid_files = []
@@ -27,7 +27,6 @@ print("ගීත බාගත කරමින් පවතී...")
 for i, url in enumerate(MUSIC_URLS, start=1):
     file_path = music_path / f"song{i}.mp3"
     
-    # wget හරහා ඩවුන්ලෝඩ් කිරීම
     cmd = ["wget", "-O", str(file_path), url]
     subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     
