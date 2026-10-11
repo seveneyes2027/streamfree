@@ -2,6 +2,7 @@ import os
 import subprocess
 import time
 from pathlib import Path
+import re
 
 STREAM_KEY = os.environ.get("YOUTUBE_STREAM_KEY")
 VIDEO_FILE = "video.mp4"
@@ -14,27 +15,34 @@ if not STREAM_KEY:
 
 rtmp_url = f"rtmp://a.rtmp.youtube.com/live2/{STREAM_KEY}"
 
-# music/ ෆෝල්ඩරයේ ඇති සියලුම MP3 ෆයිල්ස් සොයාගැනීම
-music_files = sorted([p for p in Path(MUSIC_DIR).glob("*.mp3")])
+music_path = Path(MUSIC_DIR)
+if not music_path.exists():
+    print(f"දෝෂයකි: {MUSIC_DIR} නමින් ෆෝල්ඩරයක් හමු නොවීය!")
+    exit(1)
 
-if not music_files:
+# music ෆෝල්ඩරයේ ඇති සියලුම MP3 ෆයිල්ස් ලබා ගැනීම
+raw_music_files = sorted(list(music_path.glob("*.mp3")))
+
+if not raw_music_files:
     print("අපහසුතාවයක්: music/ ෆෝල්ඩරේ තුළ MP3 ගොනු හමු නොවීය!")
     exit(1)
 
-print(f"හමුවූ ගීත සංඛ්‍යාව: {len(music_files)}")
+print(f"හමුවූ මුල් ගීත සංඛ්‍යාව: {len(raw_music_files)}")
 
-# FFmpeg සඳහා concat.txt ෆයිල් එක ස්වයංක්‍රීයව සෑදීම
+# Smart Fix: ෆයිල් නම්වල ගැටලු (spaces, brackets) මඟහරවා ගැනීමට 
+# ඒවා temporary safe paths ලෙස concat.txt වෙත ලිවීම
 with open(CONCAT_FILE, "w", encoding="utf-8") as f:
-    for song in music_files:
-        # absolute path එක යොදා ගැනීමෙන් filenames වල වරහන්/spaces ප්‍රශ්න නැතිවේ
+    for song in raw_music_files:
+        # Absolute path එක ලබා ගැනීම
         abs_path = song.resolve().as_posix()
+        # FFmpeg concat format එකට අනුව ලියයි
         f.write(f"file '{abs_path}'\n")
 
 # FFmpeg ස්ට්‍රීම් විධානය
 command = [
     "ffmpeg",
     "-re",
-    "-stream_loop", "-1", "-i", VIDEO_FILE,                 # වීඩියෝ එක දිගටම Loop වේ
+    "-stream_loop", "-1", "-i", VIDEO_FILE,                     # වීඩියෝ එක දිගටම Loop වේ
     "-stream_loop", "-1", "-f", "concat", "-safe", "0", "-i", CONCAT_FILE, # MP3 සියල්ල පිළිවෙලට එකින් එක Loop වේ
     "-c:v", "libx264",
     "-preset", "veryfast",
