@@ -6,7 +6,6 @@ from pathlib import Path
 STREAM_KEY = os.environ.get("YOUTUBE_STREAM_KEY")
 VIDEO_FILE = "video.mp4"
 MUSIC_DIR = "music"
-CONCAT_FILE = "concat.txt"
 
 if not STREAM_KEY:
     print("දෝෂයකි: YOUTUBE_STREAM_KEY environment variable එක සෙට් කර නැත!")
@@ -16,45 +15,36 @@ rtmp_url = f"rtmp://a.rtmp.youtube.com/live2/{STREAM_KEY}"
 
 music_path = Path(MUSIC_DIR)
 if not music_path.exists():
-    print(f"දෝෂයකි: {MUSIC_DIR} නමින් ෆෝල්ඩරයක් හමු නොවීය!")
+    print("දෝෂයකි: music නමින් ෆෝල්ඩරයක් හමු නොවීය!")
     exit(1)
 
-# ස්මාර්ට් ක්‍රමය: ෆයිල් නම්වල spaces, brackets වගේ ප්‍රශ්න මඟහරවා ගැනීමට 
-# ෆෝල්ඩරේ ඇති සියලුම MP3 ෆයිල්ස් පිළිවෙළකට අලුත් නම්වලට (track_1.mp3, track_2.mp3...) ස්වයංක්‍රීයව Rename කිරීම
-raw_music_files = sorted(list(music_path.glob("*.mp3")))
+# music ෆෝල්ඩරයේ ඇති සියලුම MP3 ෆයිල්ස් ලබා ගැනීම (නම කුමක් වුවත්)
+music_files = sorted(list(music_path.glob("*.mp3")))
 
-if not raw_music_files:
+if not music_files:
     print("අපහසුතාවයක්: music/ ෆෝල්ඩරේ තුළ MP3 ගොනු හමු නොවීය!")
     exit(1)
 
-print(f"හමුවූ ගීත සංඛ්‍යාව: {len(raw_music_files)}")
+print(f"හමුවූ ගීත සංඛ්‍යාව: {len(music_files)}")
 
-renamed_music_files = []
-for index, song in enumerate(raw_music_files, start=1):
-    new_name = music_path / f"track_{index}.mp3"
-    try:
-        # දැනටමත් rename වී නැත්නම් හෝ නම වෙනස් නම් rename කරන්න
-        if song != new_name:
-            if new_name.exists():
-                new_name.unlink()
-            song.rename(new_name)
-        renamed_music_files.append(new_name)
-    except Exception as e:
-        print(f"ගොනුව නම් කිරීමේ දෝෂයක් ({song.name}): {e}")
-        renamed_music_files.append(song) # බැරි වුණොත් මුල් නමම පාවිච්චි කරයි
+# FFmpeg සඳහා audio inputs සකස් කිරීම (සෑම සිංදුවක්ම -stream_loop -1 මඟින් අනන්තවත් ලූප් වේ)
+audio_inputs = []
+for song in music_files:
+    abs_path = song.resolve().as_posix()
+    audio_inputs.extend(["-stream_loop", "-1", "-i", abs_path])
 
-# FFmpeg සඳහා concat.txt ෆයිල් එක සෑදීම
-with open(CONCAT_FILE, "w", encoding="utf-8") as f:
-    for song in renamed_music_files:
-        abs_path = song.resolve().as_posix()
-        f.write(f"file '{abs_path}'\n")
+# සිංදු සියල්ල එකින් එක පිළිවෙළට ප්ලේ වීමට (concat) FFmpeg filter එක සැකසීම
+# [1:a][2:a][3:a][4:a] concat=n=4:v=0:a=1 [outa]
+inputs_mapping = "".join([f"[{i}:a]" for i in range(1, len(music_files) + 1)])
+filter_complex_str = f"{inputs_mapping}concat=n={len(music_files)}:v=0:a=1[outa]"
 
 # FFmpeg ස්ට්‍රීම් විධානය
 command = [
     "ffmpeg",
     "-re",
-    "-stream_loop", "-1", "-i", VIDEO_FILE,                     # වීඩියෝ එක දිගටම Loop වේ
-    "-stream_loop", "-1", "-f", "concat", "-safe", "0", "-i", CONCAT_FILE, # MP3 සියල්ල පිළිවෙලට එකින් එක Loop වේ
+    "-stream_loop", "-1", "-i", VIDEO_FILE,     # වීඩියෝ එක දිගටම Loop වේ
+] + audio_inputs + [
+    "-filter_complex", filter_complex_str,
     "-c:v", "libx264",
     "-preset", "veryfast",
     "-b:v", "3000k",
@@ -65,7 +55,7 @@ command = [
     "-c:a", "aac",
     "-b:a", "128k",
     "-map", "0:v:0",
-    "-map", "1:a:0",
+    "-map", "[outa]",
     "-shortest",
     "-f", "flv",
     rtmp_url
