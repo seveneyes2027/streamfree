@@ -5,7 +5,7 @@ from pathlib import Path
 
 STREAM_KEY = os.environ.get("YOUTUBE_STREAM_KEY")
 VIDEO_FILE = "video.mp4"
-MUSIC_DIR = "music"
+MUSIC_DIR = "."  # දැන් සිංදු තියෙන්නේ ප්‍රධාන ෆෝල්ඩරේ (root directory) තුළයි
 CONCAT_FILE = "concat.txt"
 
 if not STREAM_KEY:
@@ -15,20 +15,16 @@ if not STREAM_KEY:
 rtmp_url = f"rtmp://a.rtmp.youtube.com/live2/{STREAM_KEY}"
 music_path = Path(MUSIC_DIR)
 
-if not music_path.exists():
-    print("දෝෂයකි: music නමින් ෆෝල්ඩරයක් හමු නොවීය!")
-    exit(1)
-
-# music ෆෝල්ඩරේ ඇති MP3 ෆයිල්ස් ලබා ගැනීම
-music_files = sorted(list(music_path.glob("*.mp3")))
+# ප්‍රධාන ෆෝල්ඩරයෙන් MP3 ෆයිල්ස් පමණක් සොයා ගැනීම
+music_files = sorted([p for p in music_path.glob("*.mp3") if p.name != "video.mp4"])
 
 if not music_files:
-    print("අපහසුතාවයක්: music/ ෆෝල්ඩරේ තුළ MP3 ගොනු හමු නොවීය!")
+    print("අපහසුතාවයක්: කිසිදු MP3 ගොනුවක් හමු නොවීය!")
     exit(1)
 
 print(f"හමුවූ ගීත සංඛ්‍යාව: {len(music_files)}")
 
-# concat.txt ෆයිල් එක සෑදීම (වරහන් සහ spaces ගැටලු මඟහරවා ගැනීමට)
+# concat.txt ෆයිල් එක සෑදීම
 with open(CONCAT_FILE, "w", encoding="utf-8") as f:
     for song in music_files:
         abs_path = song.resolve().as_posix()
