@@ -13,7 +13,7 @@ if not STREAM_KEY:
 
 rtmp_url = f"rtmp://a.rtmp.youtube.com/live2/{STREAM_KEY}"
 
-# Root folder එකේ ඇති සියලුම MP3 ෆයිල්ස් (නියම නම සහිතව) ස්වයංක්‍රීයව අල්ලා ගැනීම
+# Root එකේ ඇති සියලුම MP3 ෆයිල්ස් ස්වයංක්‍රීයව අල්ලා ගැනීම
 music_files = sorted([p for p in Path(".").glob("*.mp3") if p.name != "video.mp4"])
 
 if not music_files:
@@ -22,7 +22,7 @@ if not music_files:
 
 print(f"හමුවූ ගීත සංඛ්‍යාව: {len(music_files)}")
 for song in music_files:
-    print(- Found: {song.name})
+    print(f"- Found: {song.name}")
 
 # FFmpeg concat filter එක සඳහා playlist.txt ගොනුව සෑදීම
 with open(PLAYLIST_FILE, "w", encoding="utf-8") as f:
