@@ -4,7 +4,7 @@ import time
 from pathlib import Path
 
 STREAM_KEY = os.environ.get("YOUTUBE_STREAM_KEY")
-VIDEO_FILE = "video.mp4"
+VIDEO_FILE = "video2.mp4"
 PLAYLIST_FILE = "playlist.txt"
 
 if not STREAM_KEY:
