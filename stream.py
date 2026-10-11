@@ -3,7 +3,7 @@ import subprocess
 import time
 
 # ටෙස්ට් කිරීම සඳහා මෙහි කෙලින්ම ඔබේ Stream Key එක දමන්න
-STREAM_KEY = "YOUR_STREAM_KEY_HERE"
+STREAM_KEY = "s0v9-q454-v2xr-bcm3-86fd"
 VIDEO_FILE = "video.mp4"
 
 if not STREAM_KEY or STREAM_KEY == "s0v9-q454-v2xr-bcm3-86fd":
