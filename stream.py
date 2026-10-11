@@ -16,16 +16,16 @@ rtmp_url = f"rtmp://a.rtmp.youtube.com/live2/{STREAM_KEY}"
 music_path = Path(MUSIC_DIR)
 music_path.mkdir(exist_ok=True)
 
-# කිසිදු දෝෂයකින් තොරව ක්ෂණිකව ඩවුන්ලෝඩ් වන සෘජු MP3 ලින්ක් (Direct MP3 Links)
+# ඔබ ලබා දුන් LimeWire සෘජු ලින්ක් 3
 MUSIC_URLS = [
-    "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-    "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
-    "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
+    "https://limewire.com/d/Eb8Tx#y837jNKsWR",
+    "https://limewire.com/d/mdmMb#FayiRxWJ1x",
+    "https://limewire.com/d/1sK2L#RfM3xjY4hS"
 ]
 
 valid_files = []
 
-print("අන්තර්ජාලයෙන් ගීත ඩවුන්ලෝඩ් කරමින් පවතී...")
+print("අන්තර්ජාලයෙන් ගීත බාගත කරමින් පවතී...")
 for i, url in enumerate(MUSIC_URLS, start=1):
     file_path = music_path / f"song{i}.mp3"
     try:
@@ -33,6 +33,8 @@ for i, url in enumerate(MUSIC_URLS, start=1):
         if file_path.stat().st_size > 1024:
             valid_files.append(file_path)
             print(f"song{i}.mp3 සාර්ථකව බාගත කරන ලදී.")
+        else:
+            print(f"අවවාදයයි: song{i}.mp3 ගොනුව හානි වී ඇත.")
     except Exception as e:
         print(f"බාගත කිරීමේ දෝෂයක් (song{i}): {e}")
 
