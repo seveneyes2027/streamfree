@@ -1,7 +1,7 @@
-name: YouTube 3-Hour Loop Stream
+name: YouTube Test Loop Stream
 
 on:
-  workflow_dispatch:  # GitHub Actions ටැබ් එකෙන් මැනුවල් Run කරගැනීමට
+  workflow_dispatch:
 
 jobs:
   build:
@@ -17,12 +17,11 @@ jobs:
         python-version: '3.10'
 
     - name: FFmpeg ස්ථාපනය කිරීම (Install FFmpeg)
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y ffmpeg
+      uses: awalsh128/cache-apt-pkgs-action@latest
+      with:
+        packages: ffmpeg
+        version: 1.0
 
     - name: Stream Script එක ක්‍රියාත්මක කිරීම
-      env:
-        YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
       run: |
         python stream.py
