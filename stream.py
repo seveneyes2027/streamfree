@@ -11,7 +11,7 @@ if not STREAM_KEY or STREAM_KEY == "s0v9-q454-v2xr-bcm3-86fd":
     exit(1)
 
 # YouTube RTMP URL එක
-rtmp_url = f"rtmp://a.rtmp.youtube.com/live2/{STREAM_KEY}"
+rtmp_url = f"rtmp://a.rtmp.youtube.com/live2/s0v9-q454-v2xr-bcm3-86fd"
 
 # වීඩියෝ එකට සවුන්ඩ් නැති නිසා අලුතින් Silent Audio එකක් එකතු කරමින් ලූප් කරන FFmpeg විධානය
 command = [
