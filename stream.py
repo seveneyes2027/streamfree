@@ -16,11 +16,11 @@ rtmp_url = f"rtmp://a.rtmp.youtube.com/live2/{STREAM_KEY}"
 music_path = Path(MUSIC_DIR)
 music_path.mkdir(exist_ok=True)
 
-# ඔබ ලබා දුන් LimeWire සෘජු ලින්ක් 3
+# Tmpfiles සෘජු ලින්ක් (Direct Links) 3
 MUSIC_URLS = [
-    "https://limewire.com/d/Eb8Tx#y837jNKsWR",
-    "https://limewire.com/d/mdmMb#FayiRxWJ1x",
-    "https://limewire.com/d/1sK2L#RfM3xjY4hS"
+    "https://tmpfiles.org/dl/w8AL6lbnwvPO/13.mp3",
+    "https://tmpfiles.org/dl/wAAf6dbJeYw6/15.mp3",
+    "https://tmpfiles.org/dl/wgAv6Cbkf3KP/17.mp3"
 ]
 
 valid_files = []
@@ -29,7 +29,13 @@ print("අන්තර්ජාලයෙන් ගීත බාගත කරම�
 for i, url in enumerate(MUSIC_URLS, start=1):
     file_path = music_path / f"song{i}.mp3"
     try:
-        urllib.request.urlretrieve(url, file_path)
+        req = urllib.request.Request(
+            url, 
+            headers={'User-Agent': 'Mozilla/5.0'}
+        )
+        with urllib.request.urlopen(req) as response, open(file_path, 'wb') as out_file:
+            out_file.write(response.read())
+
         if file_path.stat().st_size > 1024:
             valid_files.append(file_path)
             print(f"song{i}.mp3 සාර්ථකව බාගත කරන ලදී.")
