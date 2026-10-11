@@ -18,15 +18,13 @@ if not music_path.exists():
     print("දෝෂයකි: music නමින් ෆෝල්ඩරයක් හමු නොවීය!")
     exit(1)
 
-# music ෆෝල්ඩරේ ඇති සියලුම MP3 ෆයිල්ස් සොයාගෙන spaces/brackets නැතිව song1.mp3, song2.mp3 ලෙස Rename කිරීම
+# ෆෝල්ඩරේ ඇති MP3 ෆයිල්ස් පරීක්ෂා කර valid ඒවා පමණක් තෝරා ගැනීම
 raw_files = sorted(list(music_path.glob("*.mp3")))
-clean_files = []
+valid_files = []
 
 if not raw_files:
     print("අපහසුතාවයක්: music/ ෆෝල්ඩරේ තුළ MP3 ගොනු හමු නොවීය!")
     exit(1)
-
-print(f"හමුවූ ගීත සංඛ්‍යාව: {len(raw_files)}")
 
 for i, file in enumerate(raw_files, start=1):
     new_name = music_path / f"song{i}.mp3"
@@ -35,20 +33,29 @@ for i, file in enumerate(raw_files, start=1):
             if new_name.exists():
                 new_name.unlink()
             file.rename(new_name)
-        clean_files.append(new_name)
+        
+        # ෆයිල් එකේ සැබෑ ප්‍රමාණය (size) බැලීම (KB 1 කට වඩා වැඩි විය යුතුය)
+        if new_name.stat().st_size > 1024:
+            valid_files.append(new_name)
+        else:
+            print(f"අවවාදයයි: {new_name.name} ගොනුව ඉතා කුඩායි හෝ හානි වී ඇත.")
     except Exception as e:
-        print(f"Rename දෝෂයක්: {e}")
-        clean_files.append(file)
+        print(f"දෝෂයක් ({file.name}): {e}")
+
+if not valid_files:
+    print("දෝෂයකි: භාවිත කළ හැකි කිසිදු නිවැරදි MP3 ගොනුවක් හමු නොවීය!")
+    exit(1)
+
+print(f"සාර්ථකව එකතු කළ ගීත සංඛ්‍යාව: {len(valid_files)}")
 
 # FFmpeg සඳහා audio inputs සකස් කිරීම
 audio_inputs = []
-for song in clean_files:
+for song in valid_files:
     abs_path = song.resolve().as_posix()
     audio_inputs.extend(["-stream_loop", "-1", "-i", abs_path])
 
-# සිංදු එකින් එක පිළිවෙළට ප්ලේ වීමට filter එක සැකසීම
-inputs_mapping = "".join([f"[{i}:a]" for i in range(1, len(clean_files) + 1)])
-filter_complex_str = f"{inputs_mapping}concat=n={len(clean_files)}:v=0:a=1[outa]"
+inputs_mapping = "".join([f"[{i}:a]" for i in range(1, len(valid_files) + 1)])
+filter_complex_str = f"{inputs_mapping}concat=n={len(valid_files)}:v=0:a=1[outa]"
 
 # FFmpeg ස්ට්‍රීම් විධානය
 command = [
