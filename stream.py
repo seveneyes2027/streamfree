@@ -2,23 +2,25 @@ import os
 import subprocess
 import time
 
-# YouTube Stream Key එක Environment variable එකෙන් ලබා ගැනීම
-STREAM_KEY = os.environ.get("YOUTUBE_STREAM_KEY")
-VIDEO_FILE = "video.mp4"  # ඔයා අප්ලෝඩ් කරපු වීඩියෝ එකේ නම
+# ටෙස්ට් කිරීම සඳහා මෙහි කෙලින්ම ඔබේ Stream Key එක දමන්න
+STREAM_KEY = "YOUR_STREAM_KEY_HERE"
+VIDEO_FILE = "video.mp4"
 
-if not STREAM_KEY:
-    print("දෝෂයකි: YOUTUBE_STREAM_KEY එක සෙට් කර නැත!")
+if not STREAM_KEY or STREAM_KEY == "s0v9-q454-v2xr-bcm3-86fd":
+    print("දෝෂයකි: කරුණාකර කෝඩ් එකේ නිවැරදි Stream Key එක ඇතුළත් කරන්න!")
     exit(1)
 
 # YouTube RTMP URL එක
 rtmp_url = f"rtmp://a.rtmp.youtube.com/live2/{STREAM_KEY}"
 
-# FFmpeg මගින් වීඩියෝ එක දිගටම ලූප් කරමින් යැවීමේ විධානය
+# වීඩියෝ එකට සවුන්ඩ් නැති නිසා අලුතින් Silent Audio එකක් එකතු කරමින් ලූප් කරන FFmpeg විධානය
 command = [
     "ffmpeg",
     "-re",
     "-stream_loop", "-1",
     "-i", VIDEO_FILE,
+    "-f", "lavfi",
+    "-i", "anullsrc=channel_layout=stereo:sample_rate=44100",  # සවුන්ඩ් නැති වීඩියෝ එකකට audio ජනනය කරයි
     "-c:v", "libx264",
     "-preset", "veryfast",
     "-b:v", "3000k",
@@ -28,7 +30,7 @@ command = [
     "-g", "60",
     "-c:a", "aac",
     "-b:a", "128k",
-    "-ar", "44100",
+    "-shortest",  # වීඩියෝ එකේ දිගටම ශබ්දය පවත්වා ගනී
     "-f", "flv",
     rtmp_url
 ]
