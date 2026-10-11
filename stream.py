@@ -1,18 +1,19 @@
+import os
 import subprocess
 import time
 
-# ඔයාගේ Stream Key එක මෙහි සටහන් කර ඇත
-STREAM_KEY = "s0v9-q454-v2xr-bcm3-86fd"
+# GitHub Secret එකෙන් YOUTUBE_STREAM_KEY ලබා ගැනීම
+STREAM_KEY = os.environ.get("YOUTUBE_STREAM_KEY")
 VIDEO_FILE = "video.mp4"
 
-if not STREAM_KEY or STREAM_KEY == "YOUR_REAL_STREAM_KEY_HERE":
-    print("දෝෂයකි: කරුණාකර කෝඩ් එකේ නිවැරදි Stream Key එක ඇතුළත් කරන්න!")
+if not STREAM_KEY:
+    print("දෝෂයකි: YOUTUBE_STREAM_KEY environment variable එක සෙට් කර නැත!")
     exit(1)
 
 # YouTube RTMP URL එක
 rtmp_url = f"rtmp://a.rtmp.youtube.com/live2/{STREAM_KEY}"
 
-# FFmpeg ලූප් ස්ට්‍රීම් විධානය (සවුන්ඩ් නැති වීඩියෝ සඳහා ස්වයංක්‍රීයව Audio එකක් ජනනය කරයි)
+# FFmpeg ලූප් ස්ට්‍රීම් විධානය (සවුන්ඩ් නැති වීඩියෝ සඳහා ස්වයංක්‍රීයව Audio ජනනය කරයි)
 command = [
     "ffmpeg",
     "-re",
