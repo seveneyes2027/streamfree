@@ -15,10 +15,13 @@ rtmp_url = f"rtmp://a.rtmp.youtube.com/live2/{STREAM_KEY}"
 music_path = Path(MUSIC_DIR)
 music_path.mkdir(exist_ok=True)
 
-# Pixeldrain සෘජු ඩවුන්ලෝඩ් ලින්ක්ස් මෙහි ඇතුළත් කරන්න
+# Pixeldrain සෘජු ඩවුන්ලෝඩ් ලින්ක්ස් (api/file ფორමැට් එකෙන්)
 MUSIC_URLS = [
-    "https://pixeldrain.com/api/file/9777gpVt",
-    # වෙනත් සිංදු තියෙනවා නම් මෙතැනට ඒවායේ api/file/... ලින්ක්ස් දාන්න
+    "https://pixeldrain.com/api/file/e6vDwPLf",
+    "https://pixeldrain.com/api/file/kvv6JpQV",
+    "https://pixeldrain.com/api/file/kG4Dq2aD",
+    "https://pixeldrain.com/api/file/QNZYTZkv",
+    "https://pixeldrain.com/api/file/3TsY7ooc"
 ]
 
 valid_files = []
@@ -49,7 +52,7 @@ for song in valid_files:
 inputs_mapping = "".join([f"[{i}:a]" for i in range(1, len(valid_files) + 1)])
 filter_complex_str = f"{inputs_mapping}concat=n={len(valid_files)}:v=0:a=1[outa]"
 
-# FFmpeg ස්ට්‍රීම් විධානය
+# FFmpeg ස්ට්‍රීම් විධානය (Full HD, 8000kbps, ultrafast, 320kbps audio)
 command = [
     "ffmpeg",
     "-re",
@@ -57,14 +60,14 @@ command = [
 ] + audio_inputs + [
     "-filter_complex", filter_complex_str,
     "-c:v", "libx264",
-    "-preset", "veryfast",
-    "-b:v", "3000k",
-    "-maxrate", "3000k",
-    "-bufsize", "6000k",
+    "-preset", "ultrafast",
+    "-b:v", "8000k",
+    "-maxrate", "8000k",
+    "-bufsize", "16000k",
     "-pix_fmt", "yuv420p",
     "-g", "60",
     "-c:a", "aac",
-    "-b:a", "128k",
+    "-b:a", "320k",
     "-map", "0:v:0",
     "-map", "[outa]",
     "-shortest",
@@ -72,7 +75,7 @@ command = [
     rtmp_url
 ]
 
-print("ස්ට්‍රීම් වීම ආරම්භ වේ...")
+print("Full HD ස්ට්‍රීම් වීම ආරම්භ වේ...")
 while True:
     process = subprocess.Popen(command)
     process.wait()
