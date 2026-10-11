@@ -22,5 +22,7 @@ jobs:
         sudo apt-get install -y ffmpeg
 
     - name: Stream Script එක ක්‍රියාත්මක කිරීම
+      env:
+        YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
       run: |
         python stream.py
