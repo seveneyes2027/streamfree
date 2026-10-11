@@ -45,16 +45,18 @@ if not valid_files:
     print("දෝෂයකි: කිසිදු ගීතයක් ලබාගත නොහැකි විය!")
     exit(1)
 
-# FFmpeg සඳහා audio inputs සකස් කිරීම
+# FFmpeg සඳහා audio inputs සකස් කිරීම (සෑම ගීතයක්ම වෙන වෙනම ලබා දීම)
 audio_inputs = []
 for song in valid_files:
     abs_path = song.resolve().as_posix()
-    audio_inputs.extend(["-stream_loop", "-1", "-i", abs_path])
+    audio_inputs.extend(["-i", abs_path])
 
-inputs_mapping = "".join([f"[{i}:a]" for i in range(1, len(valid_files) + 1)])
-filter_complex_str = f"{inputs_mapping}concat=n={len(valid_files)}:v=0:a=1[outa]"
+# සියලුම ගීත එක පසුපස එක වැටෙන සේ concat කර, අවසානයේ [outa] මඟින් අනන්තවත් (Infinite loop) නැවත මුල සිට ක්‍රියාත්මක වන සේ සකස් කිරීම
+num_songs = len(valid_files)
+inputs_mapping = "".join([f"[{i}:a]" for i in range(1, num_songs + 1)])
+filter_complex_str = f"{inputs_mapping}concat=n={num_songs}:v=0:a=1[raw_out];[raw_out]aloop=loop=-1:size=2e+09[outa]"
 
-# FFmpeg ස්ට්‍රීම් විධානය (9000kbps, ultrafast, 32k audio)
+# FFmpeg ස්ට්‍රීම් විධානය (11000kbps, 60 FPS, ultrafast, 320k high-quality audio)
 command = [
     "ffmpeg",
     "-re",
@@ -63,13 +65,14 @@ command = [
     "-filter_complex", filter_complex_str,
     "-c:v", "libx264",
     "-preset", "ultrafast",
-    "-b:v", "9000k",
-    "-maxrate", "9000k",
-    "-bufsize", "18000k",
+    "-b:v", "11000k",
+    "-maxrate", "11000k",
+    "-bufsize", "22000k",
     "-pix_fmt", "yuv420p",
-    "-g", "60",
+    "-r", "60",          # FPS 60 ලෙස සැකසීම
+    "-g", "120",         # 60 FPS සඳහා keyframe interval එක 120 ලෙස තැබීම සුදුසුය
     "-c:a", "aac",
-    "-b:a", "32k",
+    "-b:a", "320k",      # උසස් තත්ත්වයේ 320kbps ශ්‍රව්‍යය
     "-map", "0:v:0",
     "-map", "[outa]",
     "-shortest",
@@ -77,7 +80,7 @@ command = [
     rtmp_url
 ]
 
-print("ස්ට්‍රීම් වීම ආරම්භ වේ...")
+print("FPS 60 සහ 320kbps උසස් ශ්‍රව්‍ය සමඟ ස්ට්‍රීම් වීම ආරම්භ වේ...")
 while True:
     process = subprocess.Popen(command)
     process.wait()
