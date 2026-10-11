@@ -17,11 +17,13 @@ music_path.mkdir(exist_ok=True)
 
 # Pixeldrain සෘජු ඩවුන්ලෝඩ් ලින්ක්ස් (api/file ფორමැට් එකෙන්)
 MUSIC_URLS = [
-    "https://pixeldrain.com/api/file/e6vDwPLf",
-    "https://pixeldrain.com/api/file/kvv6JpQV",
-    "https://pixeldrain.com/api/file/kG4Dq2aD",
-    "https://pixeldrain.com/api/file/QNZYTZkv",
-    "https://pixeldrain.com/api/file/3TsY7ooc"
+    "https://pixeldrain.com/api/file/1aW3EDUG",
+    "https://pixeldrain.com/api/file/D4Db62Gx",
+    "https://pixeldrain.com/api/file/mKi1Sd8i",
+    "https://pixeldrain.com/api/file/zFV7cGC7",
+    "https://pixeldrain.com/api/file/BdUWc484",
+    "https://pixeldrain.com/api/file/KiA3qGmq",
+    "https://pixeldrain.com/api/file/3hpZnmfp"
 ]
 
 valid_files = []
@@ -52,7 +54,7 @@ for song in valid_files:
 inputs_mapping = "".join([f"[{i}:a]" for i in range(1, len(valid_files) + 1)])
 filter_complex_str = f"{inputs_mapping}concat=n={len(valid_files)}:v=0:a=1[outa]"
 
-# FFmpeg ස්ට්‍රීම් විධානය (Full HD, 8000kbps, ultrafast, 320kbps audio)
+# FFmpeg ස්ට්‍රීම් විධානය (9000kbps, ultrafast, 32k audio)
 command = [
     "ffmpeg",
     "-re",
@@ -61,13 +63,13 @@ command = [
     "-filter_complex", filter_complex_str,
     "-c:v", "libx264",
     "-preset", "ultrafast",
-    "-b:v", "8000k",
-    "-maxrate", "8000k",
-    "-bufsize", "16000k",
+    "-b:v", "9000k",
+    "-maxrate", "9000k",
+    "-bufsize", "18000k",
     "-pix_fmt", "yuv420p",
     "-g", "60",
     "-c:a", "aac",
-    "-b:a", "320k",
+    "-b:a", "32k",
     "-map", "0:v:0",
     "-map", "[outa]",
     "-shortest",
@@ -75,7 +77,7 @@ command = [
     rtmp_url
 ]
 
-print("Full HD ස්ට්‍රීම් වීම ආරම්භ වේ...")
+print("ස්ට්‍රීම් වීම ආරම්භ වේ...")
 while True:
     process = subprocess.Popen(command)
     process.wait()
