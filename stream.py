@@ -2,7 +2,6 @@ import os
 import subprocess
 import time
 from pathlib import Path
-import re
 
 STREAM_KEY = os.environ.get("YOUTUBE_STREAM_KEY")
 VIDEO_FILE = "video.mp4"
@@ -20,22 +19,34 @@ if not music_path.exists():
     print(f"දෝෂයකි: {MUSIC_DIR} නමින් ෆෝල්ඩරයක් හමු නොවීය!")
     exit(1)
 
-# music ෆෝල්ඩරයේ ඇති සියලුම MP3 ෆයිල්ස් ලබා ගැනීම
+# ස්මාර්ට් ක්‍රමය: ෆයිල් නම්වල spaces, brackets වගේ ප්‍රශ්න මඟහරවා ගැනීමට 
+# ෆෝල්ඩරේ ඇති සියලුම MP3 ෆයිල්ස් පිළිවෙළකට අලුත් නම්වලට (track_1.mp3, track_2.mp3...) ස්වයංක්‍රීයව Rename කිරීම
 raw_music_files = sorted(list(music_path.glob("*.mp3")))
 
 if not raw_music_files:
     print("අපහසුතාවයක්: music/ ෆෝල්ඩරේ තුළ MP3 ගොනු හමු නොවීය!")
     exit(1)
 
-print(f"හමුවූ මුල් ගීත සංඛ්‍යාව: {len(raw_music_files)}")
+print(f"හමුවූ ගීත සංඛ්‍යාව: {len(raw_music_files)}")
 
-# Smart Fix: ෆයිල් නම්වල ගැටලු (spaces, brackets) මඟහරවා ගැනීමට 
-# ඒවා temporary safe paths ලෙස concat.txt වෙත ලිවීම
+renamed_music_files = []
+for index, song in enumerate(raw_music_files, start=1):
+    new_name = music_path / f"track_{index}.mp3"
+    try:
+        # දැනටමත් rename වී නැත්නම් හෝ නම වෙනස් නම් rename කරන්න
+        if song != new_name:
+            if new_name.exists():
+                new_name.unlink()
+            song.rename(new_name)
+        renamed_music_files.append(new_name)
+    except Exception as e:
+        print(f"ගොනුව නම් කිරීමේ දෝෂයක් ({song.name}): {e}")
+        renamed_music_files.append(song) # බැරි වුණොත් මුල් නමම පාවිච්චි කරයි
+
+# FFmpeg සඳහා concat.txt ෆයිල් එක සෑදීම
 with open(CONCAT_FILE, "w", encoding="utf-8") as f:
-    for song in raw_music_files:
-        # Absolute path එක ලබා ගැනීම
+    for song in renamed_music_files:
         abs_path = song.resolve().as_posix()
-        # FFmpeg concat format එකට අනුව ලියයි
         f.write(f"file '{abs_path}'\n")
 
 # FFmpeg ස්ට්‍රීම් විධානය
