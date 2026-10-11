@@ -2,7 +2,6 @@ import os
 import subprocess
 import time
 from pathlib import Path
-import urllib.request
 
 STREAM_KEY = os.environ.get("YOUTUBE_STREAM_KEY")
 VIDEO_FILE = "video.mp4"
@@ -25,38 +24,19 @@ MUSIC_URLS = [
 
 valid_files = []
 
-print("අන්තර්ජාලයෙන් ගීත බාගත කරමින් පවතී...")
+print("අන්තර්ජාලයෙන් ගීත බාගත කරමින් පවතී (wget හරහා)...")
 for i, url in enumerate(MUSIC_URLS, start=1):
     file_path = music_path / f"song{i}.mp3"
-    try:
-        # Browser එකක් වගේ පෙනී සිටිමින් Redirects සමඟ ඩවුන්ලෝඩ් කිරීම
-        req = urllib.request.Request(
-            url, 
-            headers={
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'audio/mpeg,application/octet-stream,*/*'
-            }
-        )
-        
-        # urlopen මඟින් ස්වයංක්‍රීයව redirect වෙන තැන් වලට ගොස් ෆයිල් එක ඩවුන්ලෝඩ් කර ගනී
-        with urllib.request.urlopen(req) as response:
-            content = response.read()
-            
-            # HTML පිටුවක් ඇවිත්දැයි බැලීම
-            if b"<!DOCTYPE html>" in content or b"<html" in content:
-                print(f"දෝෂයකි (song{i}): තවමත් වෙබ් පිටුවක් ලැබෙයි!")
-                continue
-                
-            with open(file_path, 'wb') as out_file:
-                out_file.write(content)
-
-        if file_path.stat().st_size > 50000:
-            valid_files.append(file_path)
-            print(f"song{i}.mp3 සාර්ථකව බාගත කරන ලදී.")
-        else:
-            print(f"අවවාදයයි: song{i}.mp3 ගොනුව ඉතා කුඩායි හෝ හානි වී ඇත.")
-    except Exception as e:
-        print(f"බාගත කිරීමේ දෝෂයක් (song{i}): {e}")
+    
+    # Linux wget command එක පාවිච්චි කරමින් ඩවුන්ලෝඩ් කිරීම (වෙබ් පිටු බාගත වීම වැළකේ)
+    cmd = ["wget", "-O", str(file_path), url]
+    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    
+    if file_path.exists() and file_path.stat().st_size > 50000:
+        valid_files.append(file_path)
+        print(f"song{i}.mp3 සාර්ථකව බාගත කරන ලදී.")
+    else:
+        print(f"අවවාදයයි: song{i}.mp3 ඩවුන්ලෝඩ් කරගැනීමට නොහැකි විය.")
 
 if not valid_files:
     print("දෝෂයකි: කිසිදු ගීතයක් බාගත කරගත නොහැකි විය!")
