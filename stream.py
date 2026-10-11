@@ -5,30 +5,50 @@ from pathlib import Path
 
 STREAM_KEY = os.environ.get("YOUTUBE_STREAM_KEY")
 VIDEO_FILE = "video.mp4"
+MUSIC_DIR = "music"
 
 if not STREAM_KEY:
     print("දෝෂයකි: YOUTUBE_STREAM_KEY සැට් කර නැත!")
     exit(1)
 
 rtmp_url = f"rtmp://a.rtmp.youtube.com/live2/{STREAM_KEY}"
+music_path = Path(MUSIC_DIR)
+music_path.mkdir(exist_ok=True)
 
-# GitHub එකේ root folder එකේ (ප්‍රධාන තැන) තියෙන සියලුම MP3 ෆයිල්ස් ස්වයංක්‍රීයව සොයා ගැනීම
-music_files = sorted([p for p in Path(".").glob("*.mp3") if p.name != "video.mp4"])
+# Vocaroo සෘජු MP3 ලින්ක්ස් මෙහි ඇතුළත් කරන්න (අවශ්‍ය නම් තවත් ලින්ක් එකතු කළ හැක)
+MUSIC_URLS = [
+    "https://media1.vocaroo.com/mp3/1ippMrqt7gUe",
+    # "තවත්_සිංදුවක_ඩිරෙක්ට්_ලින්ක්_එකක්_නම්_මෙතැනට_දාන්න"
+]
 
-if not music_files:
-    print("දෝෂයකි: කිසිදු MP3 ගොනුවක් හමු නොවීය!")
+valid_files = []
+
+print("ගීත බාගත කරමින් පවතී...")
+for i, url in enumerate(MUSIC_URLS, start=1):
+    file_path = music_path / f"song{i}.mp3"
+    
+    # wget හරහා ඩවුන්ලෝඩ් කිරීම
+    cmd = ["wget", "-O", str(file_path), url]
+    subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    
+    if file_path.exists() and file_path.stat().st_size > 1024:
+        valid_files.append(file_path)
+        print(f"song{i}.mp3 සාර්ථකව ලබා ගන්නා ලදී.")
+    else:
+        print(f"අවවාදයයි: song{i}.mp3 ලබා ගැනීමට නොහැකි විය.")
+
+if not valid_files:
+    print("දෝෂයකි: කිසිදු ගීතයක් ලබාගත නොහැකි විය!")
     exit(1)
-
-print(f"හමුවූ ගීත සංඛ්‍යාව: {len(music_files)}")
 
 # FFmpeg සඳහා audio inputs සකස් කිරීම
 audio_inputs = []
-for song in music_files:
+for song in valid_files:
     abs_path = song.resolve().as_posix()
     audio_inputs.extend(["-stream_loop", "-1", "-i", abs_path])
 
-inputs_mapping = "".join([f"[{i}:a]" for i in range(1, len(music_files) + 1)])
-filter_complex_str = f"{inputs_mapping}concat=n={len(music_files)}:v=0:a=1[outa]"
+inputs_mapping = "".join([f"[{i}:a]" for i in range(1, len(valid_files) + 1)])
+filter_complex_str = f"{inputs_mapping}concat=n={len(valid_files)}:v=0:a=1[outa]"
 
 # FFmpeg ස්ට්‍රීම් විධානය
 command = [
