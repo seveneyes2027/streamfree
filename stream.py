@@ -40,9 +40,9 @@ command = [
     "-stream_loop", "-1", "-i", PLAYLIST_FILE,
     "-c:v", "libx264",
     "-preset", "ultrafast",
-    "-b:v", "10000k",
-    "-maxrate", "10000k",
-    "-bufsize", "20000k",
+    "-b:v", "6000k",
+    "-maxrate", "6000k",
+    "-bufsize", "12000k",
     "-pix_fmt", "yuv420p",
     "-r", "30",          # 30 FPS
     "-g", "60",          # 30 FPS සඳහා Keyframe interval එක 60
